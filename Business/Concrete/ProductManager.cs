@@ -1,4 +1,6 @@
 ﻿using Business.Abstratc;
+using Business.Constants;
+using Core.Utilities.Results;
 using DataAccess.Abstratc;
 using DataAccess.Concrete.InMemory;
 using Entities.Concrete;
@@ -12,16 +14,18 @@ namespace Business.Concrete
     public class ProductManager : IProductService
     {
         IProductDal ProductDal;
-       
+
         public IProductDal _productDal;
 
         public ProductManager(IProductDal productDal)
         {
             _productDal = productDal;
         }
-        public List<Product> GetAll()
+        public IDataResult<List<Product>> GetAll()
         {
-            return _productDal.GetAll();
+            if (DateTime.Now.Hour == 22)
+                return ErrorResult();
+            return new DataResult<List<Product>>( _productDal.GetAll(),true,"Ürünler Listelendi");
         }
 
         public List<Product> GetAllByCategoryId(int id)
@@ -37,6 +41,24 @@ namespace Business.Concrete
         public List<ProductDetailDto> GetProductDetails()
         {
             return _productDal.GetProductDetails();
+        }
+
+        public IResult Add(Product product)
+                        
+        {
+            if (product.ProductName.Length < 2)
+            {
+                return new ErrorResult(Messages.ProductNameInvalid);
+            }
+            _productDal.Add(product);
+            
+            return new SuccessResult(Messages.ProductAdded);
+
+        }
+
+        public Product GetById(int productId)
+        {
+            return _productDal.Get(p=>p.ProductID == productId);
         }
     }
 }
